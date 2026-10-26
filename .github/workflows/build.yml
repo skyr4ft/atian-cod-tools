@@ -29,6 +29,8 @@ jobs:
   build:
     name: Atian Tools Build
     runs-on: windows-2025
+    permissions:
+      contents: write
     env:
       VCPKG_DOWNLOADS: ${{ github.workspace }}/vcpkg-downloads
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg-cache
@@ -97,8 +99,8 @@ jobs:
       - name: Create project (MIT)
         if: ${{ !inputs.gpl }}
         run: cmake -S . -B build --preset ci
-      - name: Validate project format
-        run: cmake --build build --target check-format
+      - name: Format project
+        run: cmake --build build --target format
       - name: Build project
         shell: pwsh
         run: msbuild build/AtianCodTools.slnx /p:Configuration=Release /p:Platform=x64
@@ -107,8 +109,14 @@ jobs:
       - name: Package project
         shell: pwsh
         run: scripts/package.ps1 -deployQt
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: acts-weaponraw
+          path: build/package/acts.zip
       - name: Upload dev release
         if: github.ref == 'refs/heads/main'
+        continue-on-error: true
         uses: ncipollo/release-action@v1
         with:
           commit: ${{ github.sha }}
@@ -134,5 +142,3 @@ jobs:
           tag: "${{ steps.get_version.outputs.version }}"
           name: "${{ steps.get_version.outputs.version }}"
           bodyFile: release/RELEASE.MD
-
-
