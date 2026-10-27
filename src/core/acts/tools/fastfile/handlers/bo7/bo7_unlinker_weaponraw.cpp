@@ -367,9 +367,12 @@ namespace {
                 LOG_ERROR("Can't open {}", jsonFile.string());
                 return;
             }
+            // the asset's own address and fastfile, so pointers from other assets (a weapon to its
+            // tunables, a Pack-a-Punch attachment to its tuning, a weapon to its anim package) can be matched
             json << "{\n\"type\":\"" << typeName << "\",\n\"name\":\"" << (name ? JsonEscape(name) : "")
-                 << "\",\n\"hash\":\"0x" << std::hex << hash << std::dec << "\",\n\"size\":\"0x" << std::hex
-                 << assetSize << std::dec << "\",\n\"hashes\":";
+                 << "\",\n\"hash\":\"0x" << std::hex << hash << std::dec << "\",\n\"addr\":\"0x" << std::hex
+                 << (uintptr_t)asset << std::dec << "\",\n\"ff\":\"" << JsonEscape(ctx.ffname ? ctx.ffname : "")
+                 << "\",\n\"size\":\"0x" << std::hex << assetSize << std::dec << "\",\n\"hashes\":";
             WriteHashes(json, asset, assetSize);
             json << ",\n\"pointers\":" << ptrs.str() << ",\n\"nested\":" << nested.str() << "\n}\n";
             json.close();
@@ -380,7 +383,7 @@ namespace {
 
     // window, deepMaxOff, deepWindow, nestedDepth, nestedWindow, nestedScan, aggregate
     constexpr DumpConfig CFG_ATTACHMENT{ 0x1000, 0, 0x1000, 0, 0, 0, false };
-    constexpr DumpConfig CFG_WEAPON{ 0x1000, 0x60, 0x8000, 2, 0x800, 0x8000, false };
+    constexpr DumpConfig CFG_WEAPON{ 0x1000, 0x60, 0x8000, 0, 0, 0, false }; // no nesting: the deep dump was too slow
     constexpr DumpConfig CFG_TUNABLES{ 0x1000, 0, 0x1000, 1, 0x400, 0x1000, false };
     constexpr DumpConfig CFG_BLUEPRINT{ 0x1000, 0, 0x1000, 0, 0, 0, false };
     constexpr DumpConfig CFG_ANIMPKG{ 0x1000, 0, 0x1000, 1, 0x800, 0x1000, false };
