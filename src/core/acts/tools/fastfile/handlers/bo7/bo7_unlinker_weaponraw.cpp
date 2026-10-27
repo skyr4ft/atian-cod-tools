@@ -249,7 +249,34 @@ namespace {
             for (size_t i{}; i < assetSize; i++) {
                 aggregateOut << std::format("{:02x}", (int)asset[i]);
             }
-            aggregateOut << std::dec << "\"}\n";
+            aggregateOut << std::dec << "\"";
+            if (cfg.window) {
+                // pointed blocks, so links to other assets can be followed
+                aggregateOut << ",\"ptrs\":[";
+                bool first{ true };
+                for (size_t off{}; off + sizeof(uint64_t) <= assetSize; off += sizeof(uint64_t)) {
+                    const void* target{ *(const void* const*)(asset + off) };
+                    size_t readable{};
+                    if (GetPointerKind(target, &readable) != PK_DATA) {
+                        continue;
+                    }
+                    size_t len{ (std::min<size_t>)(readable, cfg.window) };
+                    const byte* data{ (const byte*)target };
+                    if (!first) {
+                        aggregateOut << ",";
+                    }
+                    first = false;
+                    aggregateOut << "{\"off\":\"0x" << std::hex << off << std::dec << "\",\"data\":\"";
+                    for (size_t i{}; i < len; i++) {
+                        aggregateOut << std::format("{:02x}", (int)data[i]);
+                    }
+                    aggregateOut << "\",\"hashes\":";
+                    WriteHashes(aggregateOut, data, len);
+                    aggregateOut << "}";
+                }
+                aggregateOut << "]";
+            }
+            aggregateOut << "}\n";
         }
 
       public:
@@ -358,6 +385,7 @@ namespace {
     constexpr DumpConfig CFG_BLUEPRINT{ 0x1000, 0, 0x1000, 0, 0, 0, false };
     constexpr DumpConfig CFG_ANIMPKG{ 0x1000, 0, 0x1000, 1, 0x800, 0x1000, false };
     constexpr DumpConfig CFG_XANIM{ 0, 0, 0, 0, 0, 0, true };
+    constexpr DumpConfig CFG_INDEX_PTRS{ 0x200, 0, 0x200, 0, 0, 0, true };
 
     // sizes from the pool info of the game (code/bo7_poolinfo.csv), they must match the exe
     utils::MapAdder<ImplWorker, SatHashAssetType, Worker> implWeapon{
@@ -387,5 +415,18 @@ namespace {
     utils::MapAdder<ImplWorker, SatHashAssetType, Worker> implXAnim{
         GetWorkers(), SatHashAssetType::SATH_ASSET_XANIM, (size_t)0x80, SatHashAssetType::SATH_ASSET_XANIM, "xanim",
         CFG_XANIM
+    };
+    utils::MapAdder<ImplWorker, SatHashAssetType, Worker> implXAnimSet{
+        GetWorkers(), SatHashAssetType::SATH_ASSET_XANIMSET, (size_t)0x80, SatHashAssetType::SATH_ASSET_XANIMSET,
+        "xanimset", CFG_INDEX_PTRS
+    };
+    utils::MapAdder<ImplWorker, SatHashAssetType, Worker> implXAnimSetAlias{
+        GetWorkers(), SatHashAssetType::SATH_ASSET_XANIMSETALIAS, (size_t)0x30,
+        SatHashAssetType::SATH_ASSET_XANIMSETALIAS, "xanimsetalias", CFG_INDEX_PTRS
+    };
+    // not in the acts enum yet; the value is the hash of the pool name like every other entry
+    utils::MapAdder<ImplWorker, SatHashAssetType, Worker> implWeaponArchetype{
+        GetWorkers(), static_cast<SatHashAssetType>(hash::HashX32("weaponarchetype")), (size_t)0x28,
+        static_cast<SatHashAssetType>(hash::HashX32("weaponarchetype")), "weaponarchetype", CFG_INDEX_PTRS
     };
 } // namespace
