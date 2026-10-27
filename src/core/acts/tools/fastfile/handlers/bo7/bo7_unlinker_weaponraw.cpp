@@ -441,9 +441,9 @@ namespace {
         GetWorkers(), static_cast<SatHashAssetType>(hash::HashX32("weaponarchetype")), (size_t)0x28,
         static_cast<SatHashAssetType>(hash::HashX32("weaponarchetype")), "weaponarchetype", CFG_INDEX_PTRS
     };
-    // zombies AI (bosses): character and anim settings, raw struct plus two levels of pointed-to data,
+    // zombies AI (bosses): character and anim settings, raw struct plus the blocks it points to (no deeper nesting),
     // to look for health, damage-taken, weak-spot and per-weapon-class rules
-    constexpr DumpConfig CFG_AI{ 0x1000, 0, 0x1000, 2, 0x1000, 0x1000, false };
+    constexpr DumpConfig CFG_AI{ 0x1000, 0, 0x1000, 0, 0, 0, false }; // no nesting: depth 2 crashed on character data
     // aitype: acts already has its own exporter (bo7_unlinker_aitype.cpp, writes tables/ai/type/*.json)
     utils::MapAdder<ImplWorker, SatHashAssetType, Worker> implCharacter{
         GetWorkers(), SatHashAssetType::SATH_ASSET_CHARACTER, (size_t)0xe8,
