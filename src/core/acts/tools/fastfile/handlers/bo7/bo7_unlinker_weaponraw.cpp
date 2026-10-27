@@ -427,6 +427,15 @@ namespace {
         GetWorkers(), SatHashAssetType::SATH_ASSET_XANIMSETALIAS, (size_t)0x30,
         SatHashAssetType::SATH_ASSET_XANIMSETALIAS, "xanimsetalias", CFG_INDEX_PTRS
     };
+    // perk effects (fire rate, reload, critical damage) and the hit-location damage tables
+    utils::MapAdder<ImplWorker, SatHashAssetType, Worker> implPerk{
+        GetWorkers(), SatHashAssetType::SATH_ASSET_PERK, (size_t)0x60, SatHashAssetType::SATH_ASSET_PERK, "perk",
+        CFG_TUNABLES
+    };
+    utils::MapAdder<ImplWorker, SatHashAssetType, Worker> implLocDmgTable{
+        GetWorkers(), SatHashAssetType::SATH_ASSET_LOCDMGTABLE, (size_t)0x60, SatHashAssetType::SATH_ASSET_LOCDMGTABLE,
+        "locdmgtable", CFG_TUNABLES
+    };
     // not in the acts enum yet; the value is the hash of the pool name like every other entry
     utils::MapAdder<ImplWorker, SatHashAssetType, Worker> implWeaponArchetype{
         GetWorkers(), static_cast<SatHashAssetType>(hash::HashX32("weaponarchetype")), (size_t)0x28,
